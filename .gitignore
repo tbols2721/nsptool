@@ -1,0 +1,22 @@
+build/
+nsptool
+*.o
+nspire-backup-*/
+# Personal calculator files, captures, and credentials
+*.tns
+*.tcc2
+*.tco2
+*.tct2
+*.tco
+*.tno
+*.zip
+*.log
+*.deb
+*.so
+*.bundle
+.env
+.env.*
+*.pem
+*.key
+__pycache__/
+local/

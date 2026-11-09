@@ -1,0 +1,22 @@
+nspire_file_read: never copy past the caller's buffer
+
+The read loop copied every chunk the calculator sent, even once the
+buffer passed in was full, so a file larger than "size" overflowed it.
+Some files change size between reads (NspireLogs.zip is generated on
+each read), so callers cannot guarantee the size in advance. Stop
+copying when the buffer is full; *total_bytes still reports the full
+length so the caller can retry with a larger buffer.
+
+diff --git a/src/services/file.c b/src/services/file.c
+index d1250b1..0883524 100644
+--- a/src/services/file.c
++++ b/src/services/file.c
+@@ -118,6 +118,8 @@ int nspire_file_read(nspire_handle_t *handle, const char *path,
+ 
+ 		if (size) {
+ 			size_t to_copy = len - 1;
++			if (to_copy > size)
++				to_copy = size;
+ 			memcpy(ptr, buffer + 1, to_copy);
+ 			size -= to_copy;
+ 

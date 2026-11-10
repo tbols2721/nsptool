@@ -9,15 +9,22 @@ LIBNSPIRE_COMMIT=7d7d962ca49ff9017f6f146336c51ef7f2edf4e0
 
 here=$(cd "$(dirname "$0")" && pwd)
 build=$here/build
+upstream=$build/libnspire
+L=$build/libnspire-src
 mkdir -p "$build"
 
-if [ ! -d "$build/libnspire" ]; then
-	git clone "$LIBNSPIRE_REPO" "$build/libnspire"
+if [ ! -d "$upstream" ]; then
+	git clone "$LIBNSPIRE_REPO" "$upstream"
 fi
-# Reset to the pinned commit and apply our fixes (see patches/).
-git -C "$build/libnspire" reset -q --hard "$LIBNSPIRE_COMMIT"
+# Keep the Git cache pristine; patch a separate generated source copy.
+if [ -n "$(git -C "$upstream" status --porcelain)" ]; then
+	echo "The libnspire Git cache has local changes; preserve them before building." >&2
+	exit 1
+fi
+mkdir -p "$L"
+git -C "$upstream" archive "$LIBNSPIRE_COMMIT" | tar -xf - -C "$L"
 for p in "$here"/patches/*.patch; do
-	git -C "$build/libnspire" apply "$p"
+	patch --batch --forward -d "$L" -p1 < "$p"
 done
 
 # libusb headers: system copy if present, otherwise a local unpack.
@@ -42,12 +49,11 @@ fi
 # config.h is normally produced by ./configure; libnspire only needs the
 # host byte order from it.
 if gcc -dM -E - </dev/null | grep -q '__BYTE_ORDER__ __ORDER_BIG_ENDIAN__'; then
-	echo '#define ENDIAN_BIG' > "$build/libnspire/config.h"
+	echo '#define ENDIAN_BIG' > "$L/config.h"
 else
-	echo '#define ENDIAN_LITTLE' > "$build/libnspire/config.h"
+	echo '#define ENDIAN_LITTLE' > "$L/config.h"
 fi
 
-L=$build/libnspire
 inc="-I$L -I$L/src -I$L/src/api $usb_cflags -DHAVE_CONFIG_H"
 objs=$build/obj
 mkdir -p "$objs"

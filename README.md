@@ -7,14 +7,14 @@ before sending an update. USB communication uses
 
 ## Requirements and build
 
-Use Linux with GCC, G++, Git, pkg-config, and the libusb 1.0 runtime. The build
+Use Linux with GCC, G++, Git, tar, patch, pkg-config, and the libusb 1.0 runtime. The build
 uses libnspire revision `7d7d962ca49ff9017f6f146336c51ef7f2edf4e0` and applies
 the repository's bounded-read patch before compiling.
 
 On Debian or Ubuntu, the normal development dependencies are:
 
 ```sh
-sudo apt install build-essential git pkg-config libusb-1.0-0-dev
+sudo apt install build-essential git tar patch pkg-config libusb-1.0-0-dev
 ```
 
 Clone and build:
@@ -32,9 +32,10 @@ system-wide. This fallback needs `apt-get`, `dpkg`, and a discoverable libusb
 runtime. It is specific to Debian-style systems. Preparation needs network
 access; no calculator is required to compile or display help.
 
-The build directory contains a disposable upstream checkout. Rebuilding resets
-that checkout to the pinned revision before applying patches. Keep any separate
-libnspire development work elsewhere.
+The build directory contains a pristine upstream Git cache. Each build extracts
+the pinned revision into a separate source directory and applies the patches
+there. Repeated builds leave the Git cache clean. If the cache has local edits,
+the build stops so you can preserve them.
 
 ## Commands
 
